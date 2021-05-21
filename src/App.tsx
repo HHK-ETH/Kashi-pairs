@@ -1,14 +1,20 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import Route from "./components/Route";
+import Pairs from "./pages/pairs";
+import Home from "./pages/home";
+import {KashiPairInfos} from "./utils/constants";
 
 function App() {
+
+    const [kashiPairs, setKashiPairs]: [KashiPairInfos[], Function] = useState([]);
+
     return (
-        <div>
+        <div className={'container'}>
             <Route path={'/'}>
-                <p>home</p>
+                <Home setKashiPairs={setKashiPairs}/>
             </Route>
             <Route path={'/pairs'}>
-                <p>pairs</p>
+                <Pairs kashiPairs={kashiPairs}/>
             </Route>
         </div>
     );
