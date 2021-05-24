@@ -9,6 +9,7 @@ function Spinner({display}: {display: boolean}): JSX.Element {
                 <div className={"spinner-border"} role={"status"}>
                     <span className={"visually-hidden"}>Loading...</span>
                 </div>
+                Fetching pairs...
             </div>
         );
     }
@@ -20,9 +21,9 @@ function Home({setKashiPairs}: {setKashiPairs: Function}): JSX.Element {
     const onClick = async function(event: any) {
         event.preventDefault();
         setSpinner(true);
-        //const kashiHelper: KashiHelper = await KashiHelper.getInstance();
-        //const kashiPairs: KashiPairInfos[] = await KashiHelper.kashiPairsInfos(kashiHelper.kashiPairs);
-        //setKashiPairs(kashiPairs);
+        const kashiHelper: KashiHelper = await KashiHelper.getInstance();
+        const kashiPairs: KashiPairInfos[] = await KashiHelper.kashiPairsInfos(kashiHelper.kashiPairs);
+        setKashiPairs(kashiPairs);
         setSpinner(false);
         window.history.pushState({}, "", '/pairs');
         const navEvent = new PopStateEvent('popstate');
