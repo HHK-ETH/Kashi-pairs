@@ -22,13 +22,14 @@ export class KashiHelper {
 
     private static async getAllKashiPairs(bentoBox: Contract): Promise<Contract[]> {
         const kashiAddresses: any[] = await bentoBox.queryFilter(bentoBox.filters.LogDeploy(KASHI_ADDR));
-        return kashiAddresses.reduce((kashiPairs: any, log: any) => {
+        return kashiAddresses.reduce((kashiPairs: Contract[], log: any) => {
             if (log.args.cloneAddress !== undefined) {
                 //TODO use metamask provider instead of personal infura
-                kashiPairs.push(new Contract(log.args.cloneAddress, KASHI_ABI, new ethers.providers.InfuraProvider("homestead", 'd3a9e80d30ec469594562f41b54da082')));
+                const pairContract: Contract = new Contract(log.args.cloneAddress, KASHI_ABI, new ethers.providers.InfuraProvider("homestead", 'd3a9e80d30ec469594562f41b54da082'))
+                kashiPairs.push(pairContract);
             }
             return kashiPairs;
-        });
+        }, []);
     }
 
     public static async kashiPairsInfos(kashiPairs: Contract[]): Promise<KashiPairInfos[]> {
