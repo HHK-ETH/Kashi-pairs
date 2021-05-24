@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import Route from "./components/Route";
 import Pairs from "./pages/pairs";
 import Home from "./pages/home";
