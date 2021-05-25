@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {KashiPairInfos, Token, TOKEN_LIST} from "../utils/constants";
 import {formatUnits} from "ethers/lib/utils";
 
@@ -15,7 +15,37 @@ export function SearchPair({setTokenSymbol}: {setTokenSymbol: Function}): JSX.El
     );
 }
 
+async function fetchPrice(index: number, asset: Token): Promise<number> {
+    return fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${asset.symbol}&vs_currencies=usd`, {method: 'GET'})
+        .then((res) => {
+            return res.json().then((res) => {
+                if (res[asset.symbol.toLowerCase()]) {
+                    console.log(parseFloat(res[asset.symbol.toLowerCase()].usd))
+                    return parseFloat(res[asset.symbol.toLowerCase()].usd);
+                }
+                return 0;
+            })
+        });
+}
+
 function Pairs({kashiPairs, search}: {kashiPairs: KashiPairInfos[], search: string}): JSX.Element {
+
+    const [prices, setPrices]: [number[], Function] = useState(new Array(kashiPairs.length));
+
+    useEffect(() => {
+        async function fetchAll() {
+            const prices = kashiPairs.map(async (pair, index) => {
+                const asset: Token | undefined = TOKEN_LIST.find(token => token.address === pair.assetAddress);
+                if (asset === undefined) {
+                    return 0;
+                }
+                return await (fetchPrice(index, asset));
+            });
+            setPrices(await Promise.all(prices));
+        }
+        fetchAll();
+    }, [kashiPairs]);
+
     return (
         <div>
             {
@@ -33,11 +63,11 @@ function Pairs({kashiPairs, search}: {kashiPairs: KashiPairInfos[], search: stri
                     if (asset !== undefined && collateral !== undefined &&
                         (asset.symbol.toLowerCase().indexOf(search.toLowerCase()) !==  -1 || collateral.symbol.toLowerCase().indexOf(search.toLowerCase()) !== -1)) {
                         const totalAsset: number = parseFloat(formatUnits(pair.totalAsset.elastic, asset.decimals)) + parseFloat(formatUnits(pair.totalBorrow.elastic, asset.decimals));
-                        const kmValue: number = totalAsset / parseFloat(formatUnits(pair.totalAsset.base, asset.decimals))
+                        const kmValue: number = totalAsset / parseFloat(formatUnits(pair.totalAsset.base, asset.decimals));
                         return (
                             <div className="card text-center">
-                                <div className="card-header">
-                                    1 - km{collateral.symbol}-{asset.symbol} = {kmValue ? kmValue.toFixed(5) : 1} {asset.symbol} = x $
+                                <div className="card-header" key={index}>
+                                    1 - km{collateral.symbol}-{asset.symbol} = {kmValue ? kmValue.toFixed(5) : 1} {asset.symbol} = {prices[index] !== 0 ? `${(kmValue * prices[index]).toFixed(5)}$` : 'Unable to fetch price'}
                                 </div>
                                 <div className="card-body container">
                                     <img src={asset.logoURI} alt={"img"} className={"col-3"}/>
