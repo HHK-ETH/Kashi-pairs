@@ -15,33 +15,30 @@ export function SearchPair({setTokenSymbol}: {setTokenSymbol: Function}): JSX.El
     );
 }
 
-async function fetchPrice(index: number, asset: Token): Promise<number> {
-    return fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${asset.symbol}&vs_currencies=usd`, {method: 'GET'})
+async function fetchPrice(addresses: string[]): Promise<number[]> {
+    return fetch(`https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=${addresses.join(',')}&vs_currencies=usd`, {method: 'GET'})
         .then((res) => {
             return res.json().then((res) => {
-                if (res[asset.symbol.toLowerCase()]) {
-                    console.log(parseFloat(res[asset.symbol.toLowerCase()].usd))
-                    return parseFloat(res[asset.symbol.toLowerCase()].usd);
-                }
-                return 0;
+                return addresses.map((address)=> {
+                    if (res[address.toLowerCase()]) {
+                        return res[address.toLowerCase()].usd;
+                    }
+                    return 0;
+                });
             })
         });
 }
 
 function Pairs({kashiPairs, search}: {kashiPairs: KashiPairInfos[], search: string}): JSX.Element {
 
-    const [prices, setPrices]: [number[], Function] = useState(new Array(kashiPairs.length));
+    const [prices, setPrices]: [any[], Function] = useState(new Array(kashiPairs.length));
 
     useEffect(() => {
         async function fetchAll() {
-            const prices = kashiPairs.map(async (pair, index) => {
-                const asset: Token | undefined = TOKEN_LIST.find(token => token.address === pair.assetAddress);
-                if (asset === undefined) {
-                    return 0;
-                }
-                return await (fetchPrice(index, asset));
+            const addresses: string[] = kashiPairs.map((pair) => {
+                return pair.assetAddress
             });
-            setPrices(await Promise.all(prices));
+            setPrices(await fetchPrice(addresses));
         }
         fetchAll();
     }, [kashiPairs]);
@@ -67,7 +64,8 @@ function Pairs({kashiPairs, search}: {kashiPairs: KashiPairInfos[], search: stri
                         return (
                             <div className="card text-center">
                                 <div className="card-header" key={index}>
-                                    1 - km{collateral.symbol}-{asset.symbol} = {kmValue ? kmValue.toFixed(5) : 1} {asset.symbol} = {prices[index] !== 0 ? `${(kmValue * prices[index]).toFixed(5)}$` : 'Unable to fetch price'}
+                                    <h5>1 - km{collateral.symbol}-{asset.symbol} = {kmValue ? kmValue.toFixed(5) : 1} {asset.symbol}</h5>
+                                    <h5>1 - km{collateral.symbol}-{asset.symbol} = {prices[index] !== 0 ? `${(kmValue * prices[index]).toFixed(5)}$` : 'Unable to fetch price'}</h5>
                                 </div>
                                 <div className="card-body container">
                                     <img src={asset.logoURI} alt={"img"} className={"col-3"}/>
