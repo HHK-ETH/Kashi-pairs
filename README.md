@@ -1,3 +1,5 @@
+https://kashipairs.on.fleek.co/
+
 small react project to retrieve all kashi pairs and their values.
 
 Use 2 APIs : 
